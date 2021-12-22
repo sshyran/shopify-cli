@@ -173,14 +173,24 @@ module ShopifyCLI
         end
 
         def live(ctx, root: nil)
-          _status, body = fetch_themes(ctx)
+          find(ctx, root) { |attrs| attrs["role"] == "main" }
+        end
 
-          body["themes"]
-            .find { |theme_attrs| theme_attrs["role"] == "main" }
-            .tap { |theme_attrs| break new(ctx, root: root, **allowed_attrs(theme_attrs)) }
+        def find_by(ctx, name: nil, root: nil)
+          find(ctx, root) { |attrs| attrs["name"] == name }
         end
 
         private
+
+        def find(ctx, root, &block)
+          _status, body = fetch_themes(ctx)
+
+          body["themes"]
+            .find(&block)
+            .tap do |attrs|
+              break new(ctx, root: root, **allowed_attrs(attrs)) if attrs
+            end
+        end
 
         def allowed_attrs(attrs)
           attrs.slice("id", "name", "role").transform_keys(&:to_sym)
