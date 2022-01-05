@@ -65,6 +65,8 @@ module Theme
                 {{command:-j, --json}}            Output JSON instead of a UI.
                 {{command:-a, --allow-live}}      Allow push to a live theme.
                 {{command:-p, --publish}}         Publish as the live theme after uploading.
+                {{command:-x, --ignore}}          Skip uploading the specified files.
+                {{command:-q, --query}}           Upload only the specified files.
 
               Run without options to select theme from a list.
           HELP
@@ -192,6 +194,8 @@ module Theme
               {{command:-i, --themeid=THEMEID}} The Theme ID. Must be an existing theme on your store.
               {{command:-l, --live}}            Pull theme files from your remote live theme.
               {{command:-n, --nodelete}}        Runs the pull command without deleting local files.
+              {{command:-x, --ignore}}          Skip downloading the specified files.
+              {{command:-q, --query}}           Download only the specified files.
 
             Run without options to select theme from a list.
           HELP

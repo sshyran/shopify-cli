@@ -20,6 +20,10 @@ module Theme
         )
         @syncer = stub("Syncer", lock_io!: nil, unlock_io!: nil)
         @ignore_filter = mock("IgnoreFilter")
+        @query_filter = mock("QueryFilter")
+
+        ShopifyCLI::Theme::IgnoreFilter.stubs(:from_path).with(".").returns(@ignore_filter)
+        ShopifyCLI::Theme::QueryFilter.stubs(:new).returns(@query_filter)
       end
 
       def test_pull_theme
@@ -27,10 +31,8 @@ module Theme
           .with(@ctx, root: ".", id: 1234)
           .returns(@theme)
 
-        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path).with(".").returns(@ignore_filter)
-
         ShopifyCLI::Theme::Syncer.expects(:new)
-          .with(@ctx, theme: @theme, ignore_filter: @ignore_filter)
+          .with(@ctx, theme: @theme, query_filter: @query_filter, ignore_filter: @ignore_filter)
           .returns(@syncer)
 
         @syncer.expects(:start_threads)
@@ -48,10 +50,8 @@ module Theme
           .with(@ctx, root: ".")
           .returns(@theme)
 
-        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path).with(".").returns(@ignore_filter)
-
         ShopifyCLI::Theme::Syncer.expects(:new)
-          .with(@ctx, theme: @theme, ignore_filter: @ignore_filter)
+          .with(@ctx, theme: @theme, query_filter: @query_filter, ignore_filter: @ignore_filter)
           .returns(@syncer)
 
         @syncer.expects(:start_threads)
@@ -69,10 +69,8 @@ module Theme
           .with(@ctx, root: ".", id: 1234)
           .returns(@theme)
 
-        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path).with(".").returns(@ignore_filter)
-
         ShopifyCLI::Theme::Syncer.expects(:new)
-          .with(@ctx, theme: @theme, ignore_filter: @ignore_filter)
+          .with(@ctx, theme: @theme, query_filter: @query_filter, ignore_filter: @ignore_filter)
           .returns(@syncer)
 
         @syncer.expects(:start_threads)
@@ -87,16 +85,43 @@ module Theme
         @command.call([], "pull")
       end
 
+      def test_pull_with_query
+        query = "config/*"
+        query_filter = mock("QueryFilter")
+
+        ShopifyCLI::Theme::Theme.expects(:new)
+          .with(@ctx, root: ".", id: 1234)
+          .returns(@theme)
+        ShopifyCLI::Theme::QueryFilter.expects(:new)
+          .with(query)
+          .returns(query_filter)
+        ShopifyCLI::Theme::Syncer.expects(:new)
+          .with(@ctx, theme: @theme, query_filter: query_filter, ignore_filter: @ignore_filter)
+          .returns(@syncer)
+
+        @syncer.expects(:start_threads)
+        @syncer.expects(:shutdown)
+
+        @syncer.expects(:download_theme!).with(delete: true)
+        @ctx.expects(:done)
+
+        @command.options.flags[:theme_id] = 1234
+        @command.options.flags[:query] = query
+        @command.call([], "pull")
+      end
+
       def test_pull_with_ignores
         ShopifyCLI::Theme::Theme.expects(:new)
           .with(@ctx, root: ".", id: 1234)
           .returns(@theme)
 
-        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path).with(".").returns(@ignore_filter)
         @ignore_filter.expects(:add_patterns).with(["config/*"])
 
+        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path)
+          .with(".")
+          .returns(@ignore_filter)
         ShopifyCLI::Theme::Syncer.expects(:new)
-          .with(@ctx, theme: @theme, ignore_filter: @ignore_filter)
+          .with(@ctx, theme: @theme, query_filter: @query_filter, ignore_filter: @ignore_filter)
           .returns(@syncer)
 
         @syncer.expects(:start_threads)
@@ -117,10 +142,8 @@ module Theme
 
         @syncer.expects(:download_theme!).with(delete: true)
 
-        ShopifyCLI::Theme::IgnoreFilter.expects(:from_path).with(".").returns(@ignore_filter)
-
         ShopifyCLI::Theme::Syncer.expects(:new)
-          .with(@ctx, theme: @theme, ignore_filter: @ignore_filter)
+          .with(@ctx, theme: @theme, query_filter: @query_filter, ignore_filter: @ignore_filter)
           .returns(@syncer)
 
         @syncer.expects(:start_threads)
